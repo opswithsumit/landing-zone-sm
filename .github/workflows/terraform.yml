@@ -1,0 +1,55 @@
+name: Terraform CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-plan:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./enviornments/dev
+
+    steps:
+
+      # 1. Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # 3. Azure Login
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 4. Terraform Format Check
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      # 5. Terraform Init
+      - name: Terraform Init
+        run: terraform init
+
+      # 6. Terraform Validate
+      - name: Terraform Validate
+        run: terraform validate
+
+      # 7. Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
